@@ -1,0 +1,5 @@
+datetime == 5.5
+numpy == 2.3.1
+pandas == 2.3.0
+yfinance == 0.2.63
+pyarrow == 16.1.0
