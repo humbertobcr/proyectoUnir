@@ -1,126 +1,147 @@
+import pandas as pd
 from pandas import DataFrame
 import numpy as np
 import ta
+from typing import Optional
 
-def indctr_01_roi(datos:DataFrame):
-    # Rendimiento aritmético (simple)
-    datos['rendimiento_aritmetico'] = datos['Close'].pct_change()
+class tecnicalAnalysis:
+    def __init__(self,datos:DataFrame):
+        # Guardar referencia a datos originales (sin modificar)
+        self._data_original = datos
 
-    # Rendimiento logarítmico
-    datos['rendimiento_logaritmico'] = np.log(datos['Close'] / datos['Close'].shift(1))
+    def indctr_01_roi(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-    # Rendimiento acumulado aritmético
-    datos['rendimiento_acumulado_arit'] = (1 + datos['rendimiento_aritmetico']).cumprod() - 1
+        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
 
-    # Rendimiento acumulado logarítmico
-    datos['rendimiento_acumulado_log'] = datos['rendimiento_logaritmico'].cumsum()
+        # Rendimiento aritmético (simple)
+        datos_trabajo['rendimiento_aritmetico'] = datos_trabajo['Adj Close'].pct_change()
 
-    return datos
+        # Rendimiento logarítmico
+        datos_trabajo['rendimiento_logaritmico'] = np.log(datos_trabajo['Adj Close'] / datos_trabajo['Adj Close'].shift(1))
 
-def indctr_02_volatility(datos:DataFrame):
+        # Rendimiento acumulado aritmético
+        datos_trabajo['rendimiento_acumulado_arit'] = (1 + datos_trabajo['rendimiento_aritmetico']).cumprod() - 1
 
-    # Volatilidad móvil (desviación estándar de 005 días)
-    datos['volatilidad_005d'] = datos['rendimiento_logaritmico'].rolling(window=5).std() * np.sqrt(252)  # Anualizada
+        # Rendimiento acumulado logarítmico
+        datos_trabajo['rendimiento_acumulado_log'] = datos_trabajo['rendimiento_logaritmico'].cumsum()
 
-    # Volatilidad móvil (desviación estándar de 010 días)
-    datos['volatilidad_010d'] = datos['rendimiento_logaritmico'].rolling(window=10).std() * np.sqrt(252)  # Anualizada
+        return datos_trabajo
 
-    # Volatilidad móvil (desviación estándar de 015 días)
-    datos['volatilidad_015d'] = datos['rendimiento_logaritmico'].rolling(window=15).std() * np.sqrt(252)  # Anualizada
+    def indctr_02_volatility(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-    # Volatilidad móvil (desviación estándar de 020 días)
-    datos['volatilidad_020d'] = datos['rendimiento_logaritmico'].rolling(window=20).std() * np.sqrt(252)  # Anualizada
+        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
 
-    # Volatilidad móvil (desviación estándar de 030 días)
-    datos['volatilidad_030d'] = datos['rendimiento_logaritmico'].rolling(window=30).std() * np.sqrt(252)  # Anualizada
+        datos_trabajo['rendimiento_logaritmico'] = np.log(datos_trabajo['Adj Close'] / datos_trabajo['Adj Close'].shift(1))
 
-    # Volatilidad móvil (desviación estándar de 060 días)
-    datos['volatilidad_060d'] = datos['rendimiento_logaritmico'].rolling(window=60).std() * np.sqrt(252)  # Anualizada
+        # Volatilidad móvil (desviación estándar de 005 días)
+        datos_trabajo['volatilidad_005d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=5).std() * np.sqrt(252)  # Anualizada
 
-    # Volatilidad móvil (desviación estándar de 090 días)
-    datos['volatilidad_090d'] = datos['rendimiento_logaritmico'].rolling(window=90).std() * np.sqrt(252)  # Anualizada
+        # Volatilidad móvil (desviación estándar de 010 días)
+        datos_trabajo['volatilidad_010d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=10).std() * np.sqrt(252)  # Anualizada
 
-    # Volatilidad móvil (desviación estándar de 252 días)
-    datos['volatilidad_252d'] = datos['rendimiento_logaritmico'].rolling(window=252).std() * np.sqrt(252)  # Anualizada
+        # Volatilidad móvil (desviación estándar de 015 días)
+        datos_trabajo['volatilidad_015d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=15).std() * np.sqrt(252)  # Anualizada
 
-    return datos
+        # Volatilidad móvil (desviación estándar de 020 días)
+        datos_trabajo['volatilidad_020d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=20).std() * np.sqrt(252)  # Anualizada
 
-def indctr_03_moving_average_exp(datos:DataFrame):
+        # Volatilidad móvil (desviación estándar de 030 días)
+        datos_trabajo['volatilidad_030d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=30).std() * np.sqrt(252)  # Anualizada
 
-    # Medias móviles de 5 días de corto plazo
-    datos['MA005'] = datos['Close'].rolling(window=5).mean()
-    # Medias móviles de 10 días de corto plazo
-    datos['MA010'] = datos['Close'].rolling(window=10).mean()
-    # Medias móviles de 12 días de corto plazo
-    datos['MA012'] = datos['Close'].rolling(window=12).mean()
-    # Medias móviles de 20 días de mediano plazo
-    datos['MA020'] = datos['Close'].rolling(window=20).mean()
-    # Medias móviles de 50 días de mediano plazo
-    datos['MA050'] = datos['Close'].rolling(window=50).mean()
-    # Medias móviles de 60 días de mediano plazo
-    datos['MA060'] = datos['Close'].rolling(window=60).mean()
-    # Medias móviles de 100 días de largo plazo
-    datos['MA100'] = datos['Close'].rolling(window=100).mean()
-    # Medias móviles de 200 días de largo plazo
-    datos['MA200'] = datos['Close'].rolling(window=200).mean()
+        # Volatilidad móvil (desviación estándar de 060 días)
+        datos_trabajo['volatilidad_060d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=60).std() * np.sqrt(252)  # Anualizada
 
-    return datos
+        # Volatilidad móvil (desviación estándar de 090 días)
+        datos_trabajo['volatilidad_090d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=90).std() * np.sqrt(252)  # Anualizada
 
-def indctr_04_moving_average_ar(datos:DataFrame):
+        # Volatilidad móvil (desviación estándar de 252 días)
+        datos_trabajo['volatilidad_252d'] = datos_trabajo['rendimiento_logaritmico'].rolling(window=252).std() * np.sqrt(252)  # Anualizada
 
-    # Medias móviles exponenciales de 5 días de corto plazo
-    datos['EMA005'] = datos['Close'].ewm(span=5, adjust=False).mean()
-    # Medias móviles exponenciales de 10 días de corto plazo
-    datos['EMA010'] = datos['Close'].ewm(span=10, adjust=False).mean()
-    # Medias móviles exponenciales de 12 días de corto plazo
-    datos['EMA012'] = datos['Close'].ewm(span=12, adjust=False).mean()
-    # Medias móviles exponenciales de 20 días de mediano plazo
-    datos['EMA020'] = datos['Close'].ewm(span=20, adjust=False).mean()
-    # Medias móviles exponenciales de 26 días de mediano plazo
-    datos['EMA026'] = datos['Close'].ewm(span=26, adjust=False).mean()
-    # Medias móviles exponenciales de 50 días de mediano plazo
-    datos['EMA050'] = datos['Close'].ewm(span=50, adjust=False).mean()
-    # Medias móviles exponenciales de 60 días de mediano plazo
-    datos['EMA060'] = datos['Close'].ewm(span=60, adjust=False).mean()
-    # Medias móviles exponenciales de 100 días de largo plazo
-    datos['EMA100'] = datos['Close'].ewm(span=100, adjust=False).mean()
-    # Medias móviles exponenciales de 200 días de largo plazo
-    datos['EMA200'] = datos['Close'].ewm(span=200, adjust=False).mean()
+        return datos_trabajo
 
-    return datos
+    def indctr_03_moving_average_exp(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-def indctr_05_trend_indicatos(datos:DataFrame):
-    # Medias móviles exponenciales de 26 días de mediano plazo
-    datos['EMA026'] = datos['Close'].ewm(span=26, adjust=False).mean()
+        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
 
-    # Medias móviles exponenciales de 12 días de corto plazo
-    datos['EMA012'] = datos['Close'].ewm(span=12, adjust=False).mean()
+        # Medias móviles de 5 días de corto plazo
+        datos_trabajo['MA005'] = datos_trabajo['Adj Close'].rolling(window=5).mean()
+        # Medias móviles de 10 días de corto plazo
+        datos_trabajo['MA010'] = datos_trabajo['Adj Close'].rolling(window=10).mean()
+        # Medias móviles de 12 días de corto plazo
+        datos_trabajo['MA012'] = datos_trabajo['Adj Close'].rolling(window=12).mean()
+        # Medias móviles de 20 días de mediano plazo
+        datos_trabajo['MA020'] = datos_trabajo['Adj Close'].rolling(window=20).mean()
+        # Medias móviles de 50 días de mediano plazo
+        datos_trabajo['MA050'] = datos_trabajo['Adj Close'].rolling(window=50).mean()
+        # Medias móviles de 60 días de mediano plazo
+        datos_trabajo['MA060'] = datos_trabajo['Adj Close'].rolling(window=60).mean()
+        # Medias móviles de 100 días de largo plazo
+        datos_trabajo['MA100'] = datos_trabajo['Adj Close'].rolling(window=100).mean()
+        # Medias móviles de 200 días de largo plazo
+        datos_trabajo['MA200'] = datos_trabajo['Adj Close'].rolling(window=200).mean()
 
-    datos['MACD'] = datos['EMA012'] - datos['EMA026']
-    datos['Signal_MACD'] = datos['MACD'].ewm(span=9, adjust=False).mean()
+        return datos_trabajo
 
-    # Calcular ADX, +DI y -DI
-    datos['ADX'] = ta.trend.adx(datos['High'], datos['Low'], datos['Close'], window=14)
-    datos['ADX_DI_plus'] = ta.trend.adx_pos(datos['High'], datos['Low'], datos['Close'], window=14)
-    datos['ADX_DI_less'] = ta.trend.adx_neg(datos['High'], datos['Low'], datos['Close'], window=14)
+    def indctr_04_moving_average_ar(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-    # Calcular el RSI (por ejemplo, de 14 días)
-    datos['RSI'] = ta.momentum.rsi(datos['Close'], window=14)
+        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
 
-    # Calcular %K y %D
-    datos['stoch_k'] = ta.momentum.stoch(datos['High'], datos['Low'], datos['Close'], window=14, smooth_window=3)
-    datos['stoch_d'] = ta.momentum.stoch_signal(datos['High'], datos['Low'], datos['Close'], window=14, smooth_window=3)
+        # Medias móviles exponenciales de 5 días de corto plazo
+        datos_trabajo['EMA005'] = datos_trabajo['Adj Close'].ewm(span=5, adjust=False).mean()
+        # Medias móviles exponenciales de 10 días de corto plazo
+        datos_trabajo['EMA010'] = datos_trabajo['Adj Close'].ewm(span=10, adjust=False).mean()
+        # Medias móviles exponenciales de 12 días de corto plazo
+        datos_trabajo['EMA012'] = datos_trabajo['Adj Close'].ewm(span=12, adjust=False).mean()
+        # Medias móviles exponenciales de 20 días de mediano plazo
+        datos_trabajo['EMA020'] = datos_trabajo['Adj Close'].ewm(span=20, adjust=False).mean()
+        # Medias móviles exponenciales de 26 días de mediano plazo
+        datos_trabajo['EMA026'] = datos_trabajo['Adj Close'].ewm(span=26, adjust=False).mean()
+        # Medias móviles exponenciales de 50 días de mediano plazo
+        datos_trabajo['EMA050'] = datos_trabajo['Adj Close'].ewm(span=50, adjust=False).mean()
+        # Medias móviles exponenciales de 60 días de mediano plazo
+        datos_trabajo['EMA060'] = datos_trabajo['Adj Close'].ewm(span=60, adjust=False).mean()
+        # Medias móviles exponenciales de 100 días de largo plazo
+        datos_trabajo['EMA100'] = datos_trabajo['Adj Close'].ewm(span=100, adjust=False).mean()
+        # Medias móviles exponenciales de 200 días de largo plazo
+        datos_trabajo['EMA200'] = datos_trabajo['Adj Close'].ewm(span=200, adjust=False).mean()
 
-    # Calcular la diferencia
-    datos['stoch_diff'] = datos['stoch_k'] - datos['stoch_d']
+        return datos_trabajo
 
-    # Calcular el CCI
-    datos['cci'] = ta.trend.cci(high=datos['High'], low=datos['Low'], close=datos['Close'], window=20)
+    def indctr_05_trend_indicatos(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-    # Calcular Bandas de Bollinger (20-periodos, 2 desviaciones)
-    bb = ta.volatility.BollingerBands(close=datos['Close'], window=20, window_dev=2)
-    datos['bb_upper'] = bb.bollinger_hband()
-    datos['bb_lower'] = bb.bollinger_lband()
-    datos['bb_middle'] = bb.bollinger_mavg()
+        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
 
-    return datos
+        # Medias móviles exponenciales de 26 días de mediano plazo
+        datos_trabajo['EMA026'] = datos_trabajo['Adj Close'].ewm(span=26, adjust=False).mean()
+
+        # Medias móviles exponenciales de 12 días de corto plazo
+        datos_trabajo['EMA012'] = datos_trabajo['Adj Close'].ewm(span=12, adjust=False).mean()
+
+        datos_trabajo['MACD'] = datos_trabajo['EMA012'] - datos_trabajo['EMA026']
+        datos_trabajo['Signal_MACD'] = datos_trabajo['MACD'].ewm(span=9, adjust=False).mean()
+
+        # Calcular ADX, +DI y -DI
+        datos_trabajo['ADX'] = ta.trend.adx(datos_trabajo['High'], datos_trabajo['Low'], datos_trabajo['Adj Close'], window=14)
+        datos_trabajo['ADX_DI_plus'] = ta.trend.adx_pos(datos_trabajo['High'], datos_trabajo['Low'], datos_trabajo['Adj Close'], window=14)
+        datos_trabajo['ADX_DI_less'] = ta.trend.adx_neg(datos_trabajo['High'], datos_trabajo['Low'], datos_trabajo['Adj Close'], window=14)
+
+        # Calcular el RSI (por ejemplo, de 14 días)
+        datos_trabajo['RSI'] = ta.momentum.rsi(datos_trabajo['Adj Close'], window=14)
+
+        # Calcular %K y %D
+        datos_trabajo['stoch_k'] = ta.momentum.stoch(datos_trabajo['High'], datos_trabajo['Low'], datos_trabajo['Adj Close'], window=14, smooth_window=3)
+        datos_trabajo['stoch_d'] = ta.momentum.stoch_signal(datos_trabajo['High'], datos_trabajo['Low'], datos_trabajo['Adj Close'], window=14, smooth_window=3)
+
+        # Calcular la diferencia
+        datos_trabajo['stoch_diff'] = datos_trabajo['stoch_k'] - datos_trabajo['stoch_d']
+
+        # Calcular el CCI
+        datos_trabajo['cci'] = ta.trend.cci(high=datos_trabajo['High'], low=datos_trabajo['Low'], close=datos_trabajo['Close'], window=20)
+
+        # Calcular Bandas de Bollinger (20-periodos, 2 desviaciones)
+        bb = ta.volatility.BollingerBands(close=datos_trabajo['Close'], window=20, window_dev=2)
+        datos_trabajo['bb_upper'] = bb.bollinger_hband()
+        datos_trabajo['bb_lower'] = bb.bollinger_lband()
+        datos_trabajo['bb_middle'] = bb.bollinger_mavg()
+
+        return datos_trabajo
