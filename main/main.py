@@ -126,12 +126,10 @@ for ticker, nombre in empresas_bmv.items():
 
     # Cálculo de las variables de medias móviles aritméticas
     movingAverageArDF = analisisTecnico.indctr_04_moving_average_ar(movingAverageExpDF)
-
     # Cálculo de las variables de tendencia
     trendIndicatosDF = analisisTecnico.indctr_05_trend_indicatos(movingAverageArDF)
-
+    # Objeto para la escritura de las variables tecnicas calculadas
     almacenamientoTecnico = saveTransformations(trendIndicatosDF, ticker, nombre)
     almacenamientoTecnico.storageTecnicalAnalysis()
 
     print(f"\n[Almacenamiento Análisis Técnico] [{ticker}] [{nombre}] Completo ✅")
-
