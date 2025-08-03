@@ -10,6 +10,8 @@ from storage.currentStorage import currentStorage
 from transformation.tecnicalAnalysis import tecnicalAnalysis
 from storage.saveTransformations import saveTransformations
 from dateutil.relativedelta import relativedelta
+from prediction.arima import ARIMA
+from visualization.autocorrelationGraph import autocorrelationGraphs
 
 
 # Librerías externas
@@ -35,6 +37,7 @@ empresas_bmv = {
     "KIMBERA.MX": "KimberlyClark"
 }
 
+"""
 # Cálculo de los últimos días hábiles
 
 ultimo_dia_habil = obtener_fecha_consulta()
@@ -88,7 +91,6 @@ for ticker, nombre in empresas_bmv.items():
 
 print(f"\n[Almacenamiento reciente] Completo ✅. De {dia_posterior} ")
 
-
 ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json"
 
 # Leer cada línea como un diccionario
@@ -127,3 +129,18 @@ for ticker, nombre in empresas_bmv.items():
     almacenamientoTecnico.storageTecnicalAnalysis()
 
     print(f"\n[Almacenamiento Análisis Técnico] [{ticker}] [{nombre}] Completo ✅")
+"""
+
+# ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json"
+ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Banorte/Banorte_GFNORTEO_historico_mongo.json"
+#ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/AmericaMovil/AmericaMovil_AMX_historico_mongo.json"
+
+df = readJson(ruta)
+
+# Validación del modelo ARIMA
+prediccion = ARIMA(df["Adj Close"])
+dataEstacionaria = prediccion.stationary()
+print(dataEstacionaria.head(10))
+visualizacion = autocorrelationGraphs(dataEstacionaria)
+visualizacion.pacfAcf()
+visualizacion.showSerie()

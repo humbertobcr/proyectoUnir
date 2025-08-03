@@ -7,11 +7,11 @@ from typing import Optional
 class tecnicalAnalysis:
     def __init__(self,datos:DataFrame):
         # Guardar referencia a datos originales (sin modificar)
-        self._data_original = datos
+        self.data_original = datos
 
     def indctr_01_roi(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
+        datos_trabajo = data.copy() if data is not None else self.data_original.copy()
 
         # Rendimiento aritmético (simple)
         datos_trabajo['rendimiento_aritmetico'] = datos_trabajo['Adj Close'].pct_change()
@@ -29,7 +29,7 @@ class tecnicalAnalysis:
 
     def indctr_02_volatility(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
+        datos_trabajo = data.copy() if data is not None else self.data_original.copy()
 
         datos_trabajo['rendimiento_logaritmico'] = np.log(datos_trabajo['Adj Close'] / datos_trabajo['Adj Close'].shift(1))
 
@@ -61,7 +61,7 @@ class tecnicalAnalysis:
 
     def indctr_03_moving_average_exp(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
+        datos_trabajo = data.copy() if data is not None else self.data_original.copy()
 
         # Medias móviles de 5 días de corto plazo
         datos_trabajo['MA005'] = datos_trabajo['Adj Close'].rolling(window=5).mean()
@@ -84,7 +84,7 @@ class tecnicalAnalysis:
 
     def indctr_04_moving_average_ar(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
+        datos_trabajo = data.copy() if data is not None else self.data_original.copy()
 
         # Medias móviles exponenciales de 5 días de corto plazo
         datos_trabajo['EMA005'] = datos_trabajo['Adj Close'].ewm(span=5, adjust=False).mean()
@@ -109,7 +109,7 @@ class tecnicalAnalysis:
 
     def indctr_05_trend_indicatos(self, data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
-        datos_trabajo = data.copy() if data is not None else self._data_original.copy()
+        datos_trabajo = data.copy() if data is not None else self.data_original.copy()
 
         # Medias móviles exponenciales de 26 días de mediano plazo
         datos_trabajo['EMA026'] = datos_trabajo['Adj Close'].ewm(span=26, adjust=False).mean()
