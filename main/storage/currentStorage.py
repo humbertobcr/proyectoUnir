@@ -2,9 +2,10 @@ import os
 import json
 import pandas as pd
 import yfinance as yf
+from pathlib import Path
 
 def currentStorage(fecha_fin, dia_posterior, ticker, nombre):
-    rutaSalida = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/"
+    rutaSalida = Path(__file__).parent.parent.parent / "test" / "products"
     print(f"[Almacenamiento reciente] [{nombre}] Descargando datos de {nombre} ({ticker}) ...")
     df = yf.download(ticker, start=fecha_fin.isoformat(), end=dia_posterior.isoformat(),auto_adjust=False)
     df = df.reset_index()
