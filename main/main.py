@@ -109,29 +109,21 @@ df = pd.DataFrame(documentos)
 print(df.head())
 
 for ticker, nombre in empresas_bmv.items():
-
     ruta = Path(__file__).parent.parent / "test" / "products" / nombre / f"{nombre}_{ticker.replace('.MX', '')}_historico_mongo.json"
-
     df = readJson(ruta)
-
     # Cálculo de las variables de rendimientos
     analisisTecnico = tecnicalAnalysis(df)
     roiDf = analisisTecnico.indctr_01_roi()
-
     # Cálculo de las variables de volatilidad
     varDf = analisisTecnico.indctr_02_volatility(roiDf)
-
     # Cálculo de las variables de medias móviles exponenciales
     movingAverageExpDF = analisisTecnico.indctr_03_moving_average_exp(varDf)
-
     # Cálculo de las variables de medias móviles aritméticas
     movingAverageArDF = analisisTecnico.indctr_04_moving_average_ar(movingAverageExpDF)
-
     # Cálculo de las variables de tendencia
     trendIndicatosDF = analisisTecnico.indctr_05_trend_indicatos(movingAverageArDF)
-
+    # Objeto para la escritura de las variables tecnicas calculadas
     almacenamientoTecnico = saveTransformations(trendIndicatosDF, ticker, nombre)
     almacenamientoTecnico.storageTecnicalAnalysis()
 
     print(f"\n[Almacenamiento Análisis Técnico] [{ticker}] [{nombre}] Completo ✅")
-
