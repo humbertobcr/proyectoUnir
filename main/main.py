@@ -7,11 +7,16 @@
 from asignment.schedVariables import obtener_fecha_consulta
 from storage.historicalStorage import historicalStorage
 from storage.currentStorage import currentStorage
+from transformation.tecnicalAnalysis import tecnicalAnalysis
+from storage.saveTransformations import saveTransformations
+from dateutil.relativedelta import relativedelta
 
-from read.read import readJson
 
 # Librerías externas
 import pandas as pd
+from pathlib import Path
+import json
+from read.read import readJson
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -30,8 +35,6 @@ empresas_bmv = {
     "KIMBERA.MX": "KimberlyClark"
 }
 
-
-"""
 # Cálculo de los últimos días hábiles
 
 ultimo_dia_habil = obtener_fecha_consulta()
@@ -104,48 +107,31 @@ df = pd.DataFrame(documentos)
 
 # Mostrar primeros valores
 print(df.head())
-"""
 
-ListaRutas = [
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/AmericaMovil/AmericaMovil_AMX_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Banorte/Banorte_GFNORTEO_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Bimbo/Bimbo_BIMBOA_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Cemex/Cemex_CEMEXCPO_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Femsa/Femsa_FEMSAUBD_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/KimberlyClark/KimberlyClark_KIMBERA_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Peñoles/Peñoles_PE&OLES_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Televisa/Televisa_TLEVISACPO_historico_mongo.json",
-"C:/Users/chane/Documents/repositories/proyectoUnir/test/products/WalmartMexico/WalmartMexico_WALMEX_historico_mongo.json"
-]
+for ticker, nombre in empresas_bmv.items():
 
+    ruta = Path(__file__).parent.parent / "test" / "products" / nombre / f"{nombre}_{ticker.replace('.MX', '')}_historico_mongo.json"
 
-ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json"
+    df = readJson(ruta)
 
-# Leer cada línea como un diccionario
+    # Cálculo de las variables de rendimientos
+    analisisTecnico = tecnicalAnalysis(df)
+    roiDf = analisisTecnico.indctr_01_roi()
 
-df = readJson(ruta)
+    # Cálculo de las variables de volatilidad
+    varDf = analisisTecnico.indctr_02_volatility(roiDf)
 
-# Mostrar primeros valores
+    # Cálculo de las variables de medias móviles exponenciales
+    movingAverageExpDF = analisisTecnico.indctr_03_moving_average_exp(varDf)
 
-# Cálculo de las variables de rendimientos
-from transformation.tecnicalAnalysis import tecnicalAnalysis
+    # Cálculo de las variables de medias móviles aritméticas
+    movingAverageArDF = analisisTecnico.indctr_04_moving_average_ar(movingAverageExpDF)
 
-analisisTecnico = tecnicalAnalysis(df)
+    # Cálculo de las variables de tendencia
+    trendIndicatosDF = analisisTecnico.indctr_05_trend_indicatos(movingAverageArDF)
 
-roiDf = analisisTecnico.indctr_01_roi()
+    almacenamientoTecnico = saveTransformations(trendIndicatosDF, ticker, nombre)
+    almacenamientoTecnico.storageTecnicalAnalysis()
 
-# Cálculo de las variables de volatilidad
-varDf = analisisTecnico.indctr_02_volatility(roiDf)
-
-# Cálculo de las variables de medias móviles exponenciales
-movingAverageExpDF = analisisTecnico.indctr_03_moving_average_exp(varDf)
-
-# Cálculo de las variables de medias móviles aritméticas
-movingAverageArDF = analisisTecnico.indctr_04_moving_average_ar(movingAverageExpDF)
-
-# Cálculo de las variables de tendencia
-trendIndicatosDF = analisisTecnico.indctr_05_trend_indicatos(movingAverageArDF)
-
-print(trendIndicatosDF.columns)
+    print(f"\n[Almacenamiento Análisis Técnico] [{ticker}] [{nombre}] Completo ✅")
 

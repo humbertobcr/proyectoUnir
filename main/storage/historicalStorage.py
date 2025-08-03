@@ -2,9 +2,10 @@ import os
 import json
 import pandas as pd
 import yfinance as yf
+from pathlib import Path
 
 def historicalStorage(fecha_inicio, fecha_fin, ticker, nombre):
-    rutaSalida = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/"
+    rutaSalida = Path(__file__).parent.parent.parent / "test" / "products"
     print(f"[Almacenamiento histórico] [{nombre}] Descargando datos de {nombre} ({ticker}) ...")
     df = yf.download(ticker, start=fecha_inicio.isoformat(), end=fecha_fin.isoformat(),auto_adjust=False)
     df = df.reset_index()
@@ -21,21 +22,7 @@ def historicalStorage(fecha_inicio, fecha_fin, ticker, nombre):
             subcarpeta,
             f"{nombre}_{ticker.replace('.MX', '')}_historico_mongo.json"
         )
-        # Si ya existe el histórico, cargarlo y concatenar
-        if os.path.exists(ruta_archivo):
-            # Como el archivo es NDJSON, leemos línea a línea y reconstruimos DataFrame
-            documentos_previos = []
-            with open(ruta_archivo, 'r', encoding='utf-8') as f:
-                for line in f:
-                    documentos_previos.append(json.loads(line))
-            df_hist = pd.DataFrame(documentos_previos)
-            # Convertir Date a datetime para concat
-            df_hist['Date'] = pd.to_datetime(df_hist['Date'].apply(lambda d: d['$date']))
-            df_total = pd.concat([df_hist, df], ignore_index=True)
-            if 'Date' in df_total.columns:
-                df_total = df_total.drop_duplicates(subset=['Date'])
-        else:
-            df_total = df
+        df_total = df
 
         # Crear lista documentos para guardar como NDJSON
         with open(ruta_archivo, 'w', encoding='utf-8') as f:
