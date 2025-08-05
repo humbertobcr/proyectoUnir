@@ -10,7 +10,7 @@ from storage.currentStorage import currentStorage
 from transformation.tecnicalAnalysis import tecnicalAnalysis
 from storage.saveTransformations import saveTransformations
 from dateutil.relativedelta import relativedelta
-from prediction.arima import ARIMA
+from prediction.arima import SARIMAXmodel
 from visualization.autocorrelationGraph import autocorrelationGraphs
 
 
@@ -132,15 +132,15 @@ for ticker, nombre in empresas_bmv.items():
 """
 
 # ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json"
-ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Banorte/Banorte_GFNORTEO_historico_mongo.json"
+ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/tecnicalAnalysis/Banorte/Banorte_GFNORTEO_tecnical_analysis.json"
 #ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/AmericaMovil/AmericaMovil_AMX_historico_mongo.json"
 
 df = readJson(ruta)
 
 # Validación del modelo ARIMA
-prediccion = ARIMA(df["Adj Close"])
-dataEstacionaria = prediccion.stationary()
-print(dataEstacionaria.head(10))
-visualizacion = autocorrelationGraphs(dataEstacionaria)
-visualizacion.pacfAcf()
-visualizacion.showSerie()
+prediccion = SARIMAXmodel(df["Adj Close"],"BANORTE")
+
+params = prediccion.pronosticar_sarimax(20)
+
+print(params)
+
