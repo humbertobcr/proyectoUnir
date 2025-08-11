@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import warnings
 from typing import Optional
 from statsmodels.tsa.stattools import adfuller, acf, pacf
@@ -10,6 +10,7 @@ import warnings
 import pmdarima as pm
 from joblib import Parallel, delayed
 import time
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings('ignore')
 
@@ -18,6 +19,7 @@ class SARIMAXmodel:
         self.data = datos
         self.ticker = ticker
         self.modelo = None
+        self.resultados = None
 
     def encontrar_s_optimo(self, periodos_a_probar=[5, 21, 63, 126, 252]):
         """
@@ -88,7 +90,7 @@ class SARIMAXmodel:
                 serie,
                 start_p=1, start_q=1,
                 test='adf',  # Usa el test ADF para encontrar 'd'
-                max_p=3, max_q=3,
+                max_p=4, max_q=4,
                 m=s_optimo,  # Aquí se define 's'
                 start_P=0,
                 seasonal=True,  # Activa la búsqueda estacional
@@ -148,7 +150,7 @@ class SARIMAXmodel:
             )
 
             print("🔄 Entrenando el modelo...")
-            resultados = modelo.fit(disp=False)
+            self.resultados = modelo.fit(disp=False)
             print("✅ Modelo entrenado exitosamente.")
 
             # 2. Generar predicciones
@@ -156,7 +158,7 @@ class SARIMAXmodel:
 
             # El método get_forecast() es más robusto para generar predicciones
             # y sus intervalos de confianza.
-            pronostico_resultados = resultados.get_forecast(steps=periodos_a_predecir)
+            pronostico_resultados = self.resultados.get_forecast(steps=periodos_a_predecir)
 
             # Extraer los pronósticos y los intervalos de confianza
             pronosticos = pronostico_resultados.predicted_mean
@@ -175,5 +177,82 @@ class SARIMAXmodel:
         except Exception as e:
             print(f"❌ Ocurrió un error durante el pronóstico: {e}")
             return None
+
+    def evaluar_modelo(self):
+        """
+        Evalúa el modelo SARIMAX usando datos de entrenamiento (in-sample).
+        """
+        if self.resultados is None:
+            print("⚠️ Primero entrena el modelo usando 'pronosticar_sarimax()'")
+            return None
+
+        # Predicción dentro de la muestra
+        predicciones_in_sample = self.resultados.predict(start=0, end=len(self.data) - 1)
+        reales = self.data
+
+        # Calcular métricas
+        mae = mean_absolute_error(reales, predicciones_in_sample)
+        rmse = np.sqrt(mean_squared_error(reales, predicciones_in_sample))
+        mape = np.mean(np.abs((reales - predicciones_in_sample) / reales)) * 100
+        r2 = r2_score(reales, predicciones_in_sample)
+
+        print("\n📊 Evaluación del Modelo (In-sample):")
+        print(f"  - AIC:  {self.resultados.aic:.2f}")
+        print(f"  - BIC:  {self.resultados.bic:.2f}")
+        print(f"  - Mean Absolute Error:  {mae:.4f}")
+        print(f"  - Root Mean Squared Error: {rmse:.4f}")
+        print(f"  - Mean Absolute Porcentual Error: {mape:.2f}%")
+        print(f"  - R²:   {r2:.4f}")
+
+        return {
+            'AIC': self.resultados.aic,
+            'BIC': self.resultados.bic,
+            'MAE': mae,
+            'RMSE': rmse,
+            'MAPE': mape,
+            'R2': r2
+        }
+
+    def graficar_ajuste(self, periodos_a_predecir=10):
+        if self.resultados is None:
+            print("⚠️ Primero entrena el modelo con 'pronosticar_sarimax()'")
+            return
+
+        # Valores reales
+        reales = self.data
+        # Ajuste in-sample
+        fitted = self.resultados.fittedvalues
+
+        # Pronóstico futuro
+        forecast_result = self.resultados.get_forecast(steps=periodos_a_predecir)
+        predicciones_futuro = forecast_result.predicted_mean
+        intervalos_confianza = forecast_result.conf_int()
+
+        plt.figure(figsize=(12, 6))
+
+        # Serie real
+        plt.plot(reales.index, reales, label='Real', color='black', linewidth=1.5)
+        # Ajuste del modelo
+        plt.plot(fitted.index, fitted, label='Ajuste modelo (in-sample)', color='red', linestyle='--')
+        # Pronóstico
+        plt.plot(predicciones_futuro.index, predicciones_futuro, label='Pronóstico', color='blue')
+        # Intervalos de confianza
+        plt.fill_between(
+            intervalos_confianza.index,
+            intervalos_confianza.iloc[:, 0],
+            intervalos_confianza.iloc[:, 1],
+            color='blue',
+            alpha=0.2,
+            label='Intervalo de confianza'
+        )
+
+        plt.title(f"Ajuste y Pronóstico SARIMAX - {self.ticker}")
+        plt.xlabel("Fecha")
+        plt.ylabel("Valor")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
 
 

@@ -10,7 +10,7 @@ from storage.currentStorage import currentStorage
 from transformation.tecnicalAnalysis import tecnicalAnalysis
 from storage.saveTransformations import saveTransformations
 from dateutil.relativedelta import relativedelta
-from prediction.arima import SARIMAXmodel
+from prediction.sarimax import SARIMAXmodel
 from visualization.autocorrelationGraph import autocorrelationGraphs
 
 
@@ -140,7 +140,8 @@ df = readJson(ruta)
 # Validación del modelo ARIMA
 prediccion = SARIMAXmodel(df["Adj Close"],"BANORTE")
 
-params = prediccion.pronosticar_sarimax(20)
-
-print(params)
+pronostico = prediccion.pronosticar_sarimax(60)
+print(pronostico)
+evaluacion = prediccion.evaluar_modelo()
+prediccion.graficar_ajuste(60)
 
