@@ -3,3 +3,4 @@ numpy == 2.3.1
 pandas == 2.3.0
 yfinance == 0.2.63
 pyarrow == 16.1.0
+pmdarima == 2.0.4
