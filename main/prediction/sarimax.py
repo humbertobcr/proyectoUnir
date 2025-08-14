@@ -17,11 +17,14 @@ warnings.filterwarnings('ignore')
 class SARIMAXmodel:
     def __init__(self,datos:pd.DataFrame,ticker:str):
         self.data = datos
+        self.serie = self.data["Adj Close"]
         self.ticker = ticker
         self.modelo = None
         self.resultados = None
+        self.periods = None
+        self.df_predicciones = None
 
-    def encontrar_s_optimo(self, periodos_a_probar=[5, 21, 63, 126, 252]):
+    def encontrar_s_optimo(self, periodos_a_probar=[5, 7, 21, 63, 126, 252]):
         """
         Analiza la serie para encontrar el período estacional 's' más probable.
 
@@ -33,7 +36,7 @@ class SARIMAXmodel:
             int: El valor de 's' que muestra la autocorrelación más fuerte, o None si no hay
                  una estacionalidad clara.
         """
-        serie = self.data
+        serie = self.serie
         print("\n" + "=" * 70)
         print("BUSCANDO EL PERÍODO ESTACIONAL ÓPTIMO ('s')")
         print("=" * 70)
@@ -79,7 +82,7 @@ class SARIMAXmodel:
         Es mucho más rápido que una búsqueda exhaustiva.
         """
         ticker = self.ticker
-        serie = self.data
+        serie = self.serie
         print(f"🚀 Iniciando búsqueda para {ticker}...")
         try:
             # auto_arima encuentra los mejores p,d,q,P,D,Q automáticamente.
@@ -127,10 +130,11 @@ class SARIMAXmodel:
             pd.DataFrame: Un DataFrame con las predicciones, límites inferiores
                           y superiores del intervalo de confianza.
         """
-        datos = self.data
+        datos = self.serie
         parametros = self.encontrar_mejor_sarimax_rapido()
         order = parametros["order"]
         seasonal_order = parametros["seasonal_order"]
+        self.periods =periodos_a_predecir
 
         print("📋 Parámetros de SARIMAX a utilizar:")
         print(f"  - No estacional (p, d, q): {order}")
@@ -165,14 +169,23 @@ class SARIMAXmodel:
             intervalos_confianza = pronostico_resultados.conf_int()
 
             # Unir todos los resultados en un solo DataFrame
-            df_predicciones = pd.DataFrame({
-                'pronostico': pronosticos,
-                'limite_inferior': intervalos_confianza['lower Adj Close'],
-                'limite_superior': intervalos_confianza['upper Adj Close']
+
+
+            last_date = self.data['Date'].iloc[-1]
+
+            datesPredicted = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=self.periods)
+
+            self.df_predicciones = pd.DataFrame({
+                'Date':datesPredicted,
+                'frcst_sarimax_01_mean': pronosticos,
+                'frcst_sarimax_01_low': intervalos_confianza['lower Adj Close'],
+                'frcst_sarimax_01_upper': intervalos_confianza['upper Adj Close']
             })
 
+            df_final = pd.concat([self.data, self.df_predicciones])
+
             print("✅ Pronósticos y límites generados.")
-            return df_predicciones
+            return df_final
 
         except Exception as e:
             print(f"❌ Ocurrió un error durante el pronóstico: {e}")
@@ -187,8 +200,8 @@ class SARIMAXmodel:
             return None
 
         # Predicción dentro de la muestra
-        predicciones_in_sample = self.resultados.predict(start=0, end=len(self.data) - 1)
-        reales = self.data
+        predicciones_in_sample = self.resultados.predict(start=0, end=len(self.serie)-1)
+        reales = self.serie
 
         # Calcular métricas
         mae = mean_absolute_error(reales, predicciones_in_sample)
@@ -218,8 +231,10 @@ class SARIMAXmodel:
             print("⚠️ Primero entrena el modelo con 'pronosticar_sarimax()'")
             return
 
+        df_final = pd.concat([self.data,self.df_predicciones])
+
         # Valores reales
-        reales = self.data
+        reales = self.serie
         # Ajuste in-sample
         fitted = self.resultados.fittedvalues
 
@@ -230,15 +245,18 @@ class SARIMAXmodel:
 
         plt.figure(figsize=(12, 6))
 
+        lenL = len(self.data)
+        lenU = len(self.data)+periodos_a_predecir
+
         # Serie real
-        plt.plot(reales.index, reales, label='Real', color='black', linewidth=1.5)
+        plt.plot(self.data['Date'], reales, label='Real', color='black', linewidth=1.5)
         # Ajuste del modelo
-        plt.plot(fitted.index, fitted, label='Ajuste modelo (in-sample)', color='red', linestyle='--')
+        plt.plot(self.data['Date'], fitted, label='Ajuste modelo (in-sample)', color='red', linestyle='--')
         # Pronóstico
-        plt.plot(predicciones_futuro.index, predicciones_futuro, label='Pronóstico', color='blue')
+        plt.plot(df_final.iloc[lenL:lenU]['Date'], predicciones_futuro, label='Pronóstico', color='blue')
         # Intervalos de confianza
         plt.fill_between(
-            intervalos_confianza.index,
+            df_final.iloc[lenL:lenU]['Date'],
             intervalos_confianza.iloc[:, 0],
             intervalos_confianza.iloc[:, 1],
             color='blue',
