@@ -182,10 +182,8 @@ class SARIMAXmodel:
                 'frcst_sarimax_01_upper': intervalos_confianza['upper Adj Close']
             })
 
-            df_final = pd.concat([self.data, self.df_predicciones])
-
             print("✅ Pronósticos y límites generados.")
-            return df_final
+            return self.df_predicciones
 
         except Exception as e:
             print(f"❌ Ocurrió un error durante el pronóstico: {e}")
