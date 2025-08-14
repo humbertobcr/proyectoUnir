@@ -12,7 +12,7 @@ from storage.saveTransformations import saveTransformations
 from dateutil.relativedelta import relativedelta
 from prediction.sarimax import SARIMAXmodel
 from visualization.autocorrelationGraph import autocorrelationGraphs
-
+from storage.savePredictions import savePredictions
 
 # Librerías externas
 import pandas as pd
@@ -37,7 +37,7 @@ empresas_bmv = {
     "KIMBERA.MX": "KimberlyClark"
 }
 
-"""
+'''
 # Cálculo de los últimos días hábiles
 
 ultimo_dia_habil = obtener_fecha_consulta()
@@ -129,19 +129,26 @@ for ticker, nombre in empresas_bmv.items():
     almacenamientoTecnico.storageTecnicalAnalysis()
 
     print(f"\n[Almacenamiento Análisis Técnico] [{ticker}] [{nombre}] Completo ✅")
-"""
-
-# ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/Alsea/Alsea_ALSEA_historico_mongo.json"
+'''
 ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/tecnicalAnalysis/Banorte/Banorte_GFNORTEO_tecnical_analysis.json"
-#ruta  = "C:/Users/chane/Documents/repositories/proyectoUnir/test/products/AmericaMovil/AmericaMovil_AMX_historico_mongo.json"
 
 df = readJson(ruta)
-
 # Validación del modelo ARIMA
-prediccion = SARIMAXmodel(df["Adj Close"],"BANORTE")
+prediccion = SARIMAXmodel(df,"BANORTE")
 
 pronostico = prediccion.pronosticar_sarimax(60)
-print(pronostico)
 evaluacion = prediccion.evaluar_modelo()
 prediccion.graficar_ajuste(60)
+
+for ticker, nombre in empresas_bmv.items():
+    ruta = Path(__file__).parent.parent / "test" / "tecnicalAnalysis" / nombre / f"{nombre}_{ticker.replace('.MX', '')}_tecnical_analysis.json"
+    df = readJson(ruta)
+    prediccion = SARIMAXmodel(df, nombre)
+
+    pronostico = prediccion.pronosticar_sarimax(60)
+    evaluacion = prediccion.evaluar_modelo()
+    almacenamientoPronosticos = savePredictions(pronostico, ticker, nombre)
+    almacenamientoPronosticos.storagePredictions()
+    #prediccion.graficar_ajuste(60) Descomentar en caso de validar los pronósticos
+
 
